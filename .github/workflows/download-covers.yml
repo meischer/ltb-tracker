@@ -19,12 +19,10 @@ jobs:
           mkdir -p covers/history covers/fantasy covers/galaxy covers/europa covers/mystery
           if ls covers/LTB_*.jpg 2>/dev/null | head -1 | grep -q .; then
             mv covers/LTB_*.jpg covers/haupt/
-            echo "Verschoben: $(ls covers/haupt/ | wc -l) Cover nach covers/haupt/"
-          else
-            echo "Keine alten Cover zu verschieben"
+            echo "Verschoben: $(ls covers/haupt/ | wc -l) Cover"
           fi
 
-      - name: Hauptreihe via Galerie-Seite scrapen
+      - name: Cover via Galerie-Seiten herunterladen
         run: |
           python3 << 'PYEOF'
           import urllib.request, re, os, time
@@ -32,10 +30,29 @@ jobs:
           BASE = 'https://de.duckipedia.org'
           HEADERS = {
             'Referer': 'https://de.duckipedia.org/',
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36',
+            'Accept': 'text/html,application/xhtml+xml',
+            'Accept-Language': 'de-DE,de;q=0.9',
           }
 
-          def fetch(url):
+          # (key, count, duckipedia_article, link_pattern)
+          SERIES = [
+            ('haupt',     610, 'Covergalerie_Lustiges_Taschenbuch',       r'/LTB_(\d+)"'),
+            ('spezial',   118, 'Lustiges_Taschenbuch_Spezial',            r'/LTB_Spezial_(\d+)"'),
+            ('enten',      96, 'Lustiges_Taschenbuch_Enten-Edition',      r'/LTB_Enten-Edition_(\d+)"'),
+            ('premium',    50, 'Lustiges_Taschenbuch_Premium',            r'/LTB_Premium_(\d+)"'),
+            ('ultimat',    48, 'Lustiges_Taschenbuch_Ultimate_Phantomias',r'/LTB_Ultimate_Phantomias_(\d+)"'),
+            ('maus',       30, 'Lustiges_Taschenbuch_Maus-Edition',       r'/LTB_Maus-Edition_(\d+)"'),
+            ('crime',      30, 'Lustiges_Taschenbuch_Crime',              r'/LTB_Crime_(\d+)"'),
+            ('abenteuer',  20, 'Lustiges_Taschenbuch_Abenteuer',          r'/LTB_Abenteuer_(\d+)"'),
+            ('history',     6, 'Lustiges_Taschenbuch_History',            r'/LTB_History_(\d+)"'),
+            ('fantasy',     6, 'Lustiges_Taschenbuch_Fantasy',            r'/LTB_Fantasy_(\d+)"'),
+            ('galaxy',      6, 'Lustiges_Taschenbuch_Galaxy',             r'/LTB_Galaxy_(\d+)"'),
+            ('europa',      6, 'Lustiges_Taschenbuch_Europareise',        r'/LTB_Europareise_(\d+)"'),
+            ('mystery',     6, 'Lustiges_Taschenbuch_Mystery',            r'/LTB_Mystery_(\d+)"'),
+          ]
+
+          def fetch_html(url):
             req = urllib.request.Request(url, headers=HEADERS)
             with urllib.request.urlopen(req, timeout=20) as r:
               return r.read().decode('utf-8', errors='replace')
@@ -43,112 +60,96 @@ jobs:
           def thumb_to_full(thumb_url):
             url = re.sub(r'/thumb/', '/', thumb_url)
             url = re.sub(r'/\d+px-[^/]+$', '', url)
+            if not url.startswith('http'):
+              url = BASE + url
             return url
 
-          print('=== haupt (610 Baende) ===')
-          html = fetch(BASE + '/Covergalerie_Lustiges_Taschenbuch')
-
-          # Extract: href="/LTB_N" near img with thumb
-          covers = {}
-          blocks = re.findall(
-            r'href="/LTB_(\d+)"[^>]*>.*?src="([^"]+/thumb/[^"]+)"',
-            html, re.DOTALL
-          )
-          for num, thumb in blocks:
-            n = int(num)
-            if 1 <= n <= 610:
-              covers[n] = thumb_to_full(thumb)
-
-          print('Gefunden: ' + str(len(covers)) + '/610 URLs')
-
-          ok = skip = 0
-          for n in range(1, 611):
-            # Check existing (any extension)
-            found = any(os.path.exists('covers/haupt/LTB_' + str(n) + '.' + e)
-                        for e in ['jpg','JPG','jpeg','png','PNG'])
-            if found:
-              continue
-            if n not in covers:
-              skip += 1
-              continue
-            img_url = covers[n]
-            if not img_url.startswith('http'):
-              img_url = BASE + img_url
-            ext = re.search(r'\.(\w+)$', img_url)
-            ext = ext.group(1).lower() if ext else 'jpg'
-            if ext == 'jpeg': ext = 'jpg'
-            path = 'covers/haupt/LTB_' + str(n) + '.' + ext
+          def scrape_covers(article, link_pat, count):
+            url = BASE + '/' + article
+            print('  Fetching: ' + url)
             try:
-              req = urllib.request.Request(img_url, headers=HEADERS)
-              with urllib.request.urlopen(req, timeout=20) as r:
-                data = r.read()
-              if len(data) > 2000:
-                open(path, 'wb').write(data)
-                ok += 1
-                if ok % 100 == 0:
-                  print('  ...' + str(ok) + ' heruntergeladen')
-              else:
-                skip += 1
+              html = fetch_html(url)
             except Exception as e:
-              skip += 1
-            time.sleep(0.05)
-          print('haupt: ' + str(ok) + ' OK, ' + str(skip) + ' skip')
-          PYEOF
+              print('  FEHLER: ' + str(e))
+              return {}
 
-      - name: Nebenreihen via MD5-Hash herunterladen
-        run: |
-          python3 << 'PYEOF'
-          import hashlib, urllib.request, os, time
+            covers = {}
+            # Find pairs: link to LTB page + nearby thumb image
+            # Strategy: find all gallery list items
+            items = re.findall(
+              r'href="(' + link_pat.rstrip('"') + r'[^"]*)"[^>]*>.*?src="([^"]+/thumb/[^"]+)"',
+              html, re.DOTALL
+            )
+            for link, thumb in items:
+              m = re.search(r'(\d+)"?$', link)
+              if m:
+                n = int(m.group(1))
+                if 1 <= n <= count and n not in covers:
+                  covers[n] = thumb_to_full(thumb)
 
-          # Nebenreihen haben konsistente Dateinamen - MD5-Hash-Ansatz
-          SERIES = [
-            ('spezial',   118, 'LTB_Spezial_{n}.png'),
-            ('enten',      96, 'LTB_Enten-Edition_{n}.png'),
-            ('premium',    50, 'LTB_Premium_{n}.png'),
-            ('ultimat',    48, 'LTB_Ultimate_Phantomias_{n}.png'),
-            ('maus',       30, 'LTB_Maus-Edition_{n}.png'),
-            ('crime',      30, 'LTB_Crime_{n}.png'),
-            ('abenteuer',  20, 'LTB_Abenteuer_{n}.png'),
-            ('history',     6, 'LTB_History_{n}.png'),
-            ('fantasy',     6, 'LTB_Fantasy_{n}.png'),
-            ('galaxy',      6, 'LTB_Galaxy_{n}.png'),
-            ('europa',      6, 'LTB_Europareise_{n}.png'),
-            ('mystery',     6, 'LTB_Mystery_{n}.png'),
-          ]
+            # Fallback: find by img alt text
+            if len(covers) < count // 2:
+              alts = re.findall(
+                r'<img[^>]+alt="[^"]*?(\d+)[^"]*"[^>]+src="([^"]+/thumb/[^"]+)"',
+                html
+              )
+              for num, thumb in alts:
+                n = int(num)
+                if 1 <= n <= count and n not in covers:
+                  covers[n] = thumb_to_full(thumb)
 
-          HEADERS = {
-            'Referer': 'https://de.duckipedia.org/',
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
-          }
+            print('  Gefunden: ' + str(len(covers)) + '/' + str(count))
+            return covers
+
+          def download_cover(url, path):
+            req = urllib.request.Request(url, headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=20) as r:
+              data = r.read()
+            if len(data) > 1000:
+              open(path, 'wb').write(data)
+              return True
+            return False
 
           total_ok = total_skip = 0
-          for key, count, pattern in SERIES:
-            print('\n=== ' + key + ' (' + str(count) + ') ===')
+
+          for key, count, article, link_pat in SERIES:
+            print('\n=== ' + key + ' ===')
+            covers = scrape_covers(article, link_pat, count)
             ok = skip = 0
+
             for n in range(1, count + 1):
-              path = 'covers/' + key + '/LTB_' + str(n) + '.png'
-              if os.path.exists(path):
+              # Skip if already exists
+              if any(os.path.exists('covers/' + key + '/LTB_' + str(n) + '.' + e)
+                     for e in ['jpg','JPG','jpeg','png','PNG']):
                 continue
-              fname = pattern.replace('{n}', str(n))
-              h = hashlib.md5(fname.encode()).hexdigest()
-              url = 'https://de.duckipedia.org/images/' + h[0] + '/' + h[:2] + '/' + fname
+
+              if n not in covers:
+                skip += 1
+                continue
+
+              img_url = covers[n]
+              ext = (re.search(r'\.(\w+)$', img_url) or re.search(r'', '')).group(1) if re.search(r'\.(\w+)$', img_url) else 'jpg'
+              ext = ext.lower()
+              if ext == 'jpeg': ext = 'jpg'
+              path = 'covers/' + key + '/LTB_' + str(n) + '.' + ext
+
               try:
-                req = urllib.request.Request(url, headers=HEADERS)
-                with urllib.request.urlopen(req, timeout=15) as r:
-                  data = r.read()
-                if len(data) > 2000:
-                  open(path, 'wb').write(data)
+                if download_cover(img_url, path):
                   ok += 1
+                  if ok % 50 == 0:
+                    print('  ...' + str(ok) + ' OK')
                 else:
                   skip += 1
               except Exception as e:
                 skip += 1
-              time.sleep(0.05)
+
+              time.sleep(0.1)
+
             print('  ' + key + ': ' + str(ok) + ' OK, ' + str(skip) + ' skip')
             total_ok += ok
             total_skip += skip
 
-          print('\nNebenreihen gesamt: ' + str(total_ok) + ' OK, ' + str(total_skip) + ' skip')
+          print('\nGesamt: ' + str(total_ok) + ' OK, ' + str(total_skip) + ' skip')
           PYEOF
 
       - name: Committen

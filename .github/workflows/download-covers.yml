@@ -24,62 +24,131 @@ jobs:
             echo "Keine alten Cover zu verschieben"
           fi
 
-      - name: Cover herunterladen
+      - name: Hauptreihe via Galerie-Seite scrapen
+        run: |
+          python3 << 'PYEOF'
+          import urllib.request, re, os, time
+
+          BASE = 'https://de.duckipedia.org'
+          HEADERS = {
+            'Referer': 'https://de.duckipedia.org/',
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
+          }
+
+          def fetch(url):
+            req = urllib.request.Request(url, headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=20) as r:
+              return r.read().decode('utf-8', errors='replace')
+
+          def thumb_to_full(thumb_url):
+            url = re.sub(r'/thumb/', '/', thumb_url)
+            url = re.sub(r'/\d+px-[^/]+$', '', url)
+            return url
+
+          print('=== haupt (610 Baende) ===')
+          html = fetch(BASE + '/Covergalerie_Lustiges_Taschenbuch')
+
+          # Extract: href="/LTB_N" near img with thumb
+          covers = {}
+          blocks = re.findall(
+            r'href="/LTB_(\d+)"[^>]*>.*?src="([^"]+/thumb/[^"]+)"',
+            html, re.DOTALL
+          )
+          for num, thumb in blocks:
+            n = int(num)
+            if 1 <= n <= 610:
+              covers[n] = thumb_to_full(thumb)
+
+          print('Gefunden: ' + str(len(covers)) + '/610 URLs')
+
+          ok = skip = 0
+          for n in range(1, 611):
+            # Check existing (any extension)
+            found = any(os.path.exists('covers/haupt/LTB_' + str(n) + '.' + e)
+                        for e in ['jpg','JPG','jpeg','png','PNG'])
+            if found:
+              continue
+            if n not in covers:
+              skip += 1
+              continue
+            img_url = covers[n]
+            if not img_url.startswith('http'):
+              img_url = BASE + img_url
+            ext = re.search(r'\.(\w+)$', img_url)
+            ext = ext.group(1).lower() if ext else 'jpg'
+            if ext == 'jpeg': ext = 'jpg'
+            path = 'covers/haupt/LTB_' + str(n) + '.' + ext
+            try:
+              req = urllib.request.Request(img_url, headers=HEADERS)
+              with urllib.request.urlopen(req, timeout=20) as r:
+                data = r.read()
+              if len(data) > 2000:
+                open(path, 'wb').write(data)
+                ok += 1
+                if ok % 100 == 0:
+                  print('  ...' + str(ok) + ' heruntergeladen')
+              else:
+                skip += 1
+            except Exception as e:
+              skip += 1
+            time.sleep(0.05)
+          print('haupt: ' + str(ok) + ' OK, ' + str(skip) + ' skip')
+          PYEOF
+
+      - name: Nebenreihen via MD5-Hash herunterladen
         run: |
           python3 << 'PYEOF'
           import hashlib, urllib.request, os, time
 
-          # Hauptreihe: LTB_N.jpg (mit Underscore, jpg)
-          # Nebenreihen: "LTB Reihe N.png" (mit Leerzeichen, png)
+          # Nebenreihen haben konsistente Dateinamen - MD5-Hash-Ansatz
           SERIES = [
-            ('haupt',     610, 'LTB_{n}.jpg',                    'jpg'),
-            ('spezial',   112, 'LTB Spezial {n}.png',            'png'),
-            ('enten',      96, 'LTB Enten-Edition {n}.png',      'png'),
-            ('premium',    50, 'LTB Premium {n}.png',            'png'),
-            ('ultimat',    48, 'LTB Ultimate Phantomias {n}.png','png'),
-            ('maus',       30, 'LTB Maus-Edition {n}.png',       'png'),
-            ('crime',      30, 'LTB Crime {n}.png',              'png'),
-            ('abenteuer',  20, 'LTB Abenteuer {n}.png',          'png'),
-            ('history',     6, 'LTB History {n}.png',            'png'),
-            ('fantasy',     6, 'LTB Fantasy {n}.png',            'png'),
-            ('galaxy',      6, 'LTB Galaxy {n}.png',             'png'),
-            ('europa',      6, 'LTB Europareise {n}.png',        'png'),
-            ('mystery',     6, 'LTB Mystery {n}.png',            'png'),
+            ('spezial',   118, 'LTB_Spezial_{n}.png'),
+            ('enten',      96, 'LTB_Enten-Edition_{n}.png'),
+            ('premium',    50, 'LTB_Premium_{n}.png'),
+            ('ultimat',    48, 'LTB_Ultimate_Phantomias_{n}.png'),
+            ('maus',       30, 'LTB_Maus-Edition_{n}.png'),
+            ('crime',      30, 'LTB_Crime_{n}.png'),
+            ('abenteuer',  20, 'LTB_Abenteuer_{n}.png'),
+            ('history',     6, 'LTB_History_{n}.png'),
+            ('fantasy',     6, 'LTB_Fantasy_{n}.png'),
+            ('galaxy',      6, 'LTB_Galaxy_{n}.png'),
+            ('europa',      6, 'LTB_Europareise_{n}.png'),
+            ('mystery',     6, 'LTB_Mystery_{n}.png'),
           ]
 
-          headers = {
+          HEADERS = {
             'Referer': 'https://de.duckipedia.org/',
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
           }
-          total_ok, total_skip = 0, 0
 
-          for key, count, pattern, ext in SERIES:
+          total_ok = total_skip = 0
+          for key, count, pattern in SERIES:
             print('\n=== ' + key + ' (' + str(count) + ') ===')
-            ok, skip = 0, 0
-            for n in range(1, count+1):
-              path = 'covers/' + key + '/LTB_' + str(n) + '.' + ext
+            ok = skip = 0
+            for n in range(1, count + 1):
+              path = 'covers/' + key + '/LTB_' + str(n) + '.png'
               if os.path.exists(path):
                 continue
               fname = pattern.replace('{n}', str(n))
               h = hashlib.md5(fname.encode()).hexdigest()
-              url = 'https://de.duckipedia.org/images/' + h[0] + '/' + h[:2] + '/' + fname.replace(' ', '_')
+              url = 'https://de.duckipedia.org/images/' + h[0] + '/' + h[:2] + '/' + fname
               try:
-                req = urllib.request.Request(url, headers=headers)
+                req = urllib.request.Request(url, headers=HEADERS)
                 with urllib.request.urlopen(req, timeout=15) as r:
                   data = r.read()
-                if len(data) > 1000:
+                if len(data) > 2000:
                   open(path, 'wb').write(data)
                   ok += 1
                 else:
                   skip += 1
               except Exception as e:
                 skip += 1
-              time.sleep(0.08)
+              time.sleep(0.05)
             print('  ' + key + ': ' + str(ok) + ' OK, ' + str(skip) + ' skip')
             total_ok += ok
             total_skip += skip
 
-          print('\nGesamt: ' + str(total_ok) + ' OK, ' + str(total_skip) + ' skip')
+          print('\nNebenreihen gesamt: ' + str(total_ok) + ' OK, ' + str(total_skip) + ' skip')
           PYEOF
 
       - name: Committen
@@ -88,7 +157,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add covers/
           git diff --staged --quiet && echo "Keine Aenderungen" || (
-            COUNT=$(find covers -name "*.jpg" -o -name "*.png" | wc -l)
+            COUNT=$(find covers -type f | wc -l)
             git commit -m "Cover aktualisiert ($COUNT Dateien)"
             git push
           )

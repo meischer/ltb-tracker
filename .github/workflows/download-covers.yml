@@ -155,6 +155,50 @@ jobs:
           print('\nGesamt: ' + str(total_ok) + ' OK, ' + str(total_skip) + ' skip')
           PYEOF
 
+      - name: Duplikate entfernen
+        run: |
+          python3 << 'PYEOF'
+          import hashlib, os
+
+          def file_hash(path):
+            with open(path, 'rb') as f:
+              return hashlib.md5(f.read()).hexdigest()
+
+          SERIES = ['haupt','spezial','enten','premium','ultimat','maus','crime',
+                    'abenteuer','history','fantasy','galaxy','europa','mystery']
+
+          total_removed = 0
+          for key in SERIES:
+            folder = 'covers/' + key
+            if not os.path.exists(folder):
+              continue
+            files = sorted(f for f in os.listdir(folder) if f.lower().endswith(('.jpg','.jpeg','.png','.JPG')))
+            hashes = {}
+            removed = []
+            for fname in files:
+              path = os.path.join(folder, fname)
+              h = file_hash(path)
+              if h in hashes:
+                # Duplicate found - remove the lower-numbered one (it's wrongly assigned)
+                existing = hashes[h]
+                # Extract numbers
+                import re
+                n1 = int(re.search(r'_(\d+)\.', existing).group(1))
+                n2 = int(re.search(r'_(\d+)\.', fname).group(1))
+                to_remove = existing if n1 < n2 else fname
+                os.remove(os.path.join(folder, to_remove))
+                removed.append(to_remove)
+                # Keep the higher-numbered one
+                hashes[h] = fname if n1 < n2 else existing
+              else:
+                hashes[h] = fname
+            if removed:
+              print(key + ': ' + str(len(removed)) + ' Duplikate entfernt: ' + ', '.join(removed[:5]))
+              total_removed += len(removed)
+
+          print('Gesamt entfernt: ' + str(total_removed) + ' Duplikate')
+          PYEOF
+
       - name: Committen
         run: |
           git config user.name "github-actions[bot]"

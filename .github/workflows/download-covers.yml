@@ -21,6 +21,11 @@ jobs:
             mv covers/LTB_*.jpg covers/haupt/
             echo "Verschoben: $(ls covers/haupt/ | wc -l) Cover"
           fi
+          # Alle bestehenden Cover löschen damit sie korrekt neu geladen werden
+          echo "Lösche bestehende Cover für sauberen Neustart..."
+          find covers -type f | wc -l
+          find covers -type f -delete
+          echo "Gelöscht."
 
       - name: Cover via Galerie-Seiten herunterladen
         run: |
@@ -76,29 +81,25 @@ jobs:
             covers = {}
             # Find pairs: link to LTB page + nearby thumb image
             # Strategy: find all gallery list items
-            items = re.findall(
-              r'href="(/[^"]+)"[^>]*>.*?src="([^"]+/thumb/[^"]+)"',
-              html, re.DOTALL
-            )
-            for link, thumb in items:
-              if not re.search(link_pat, link + '"'):
-                continue
-              m = re.search(r'(\d+)$', link)
+            # Extract number directly from image filename - more reliable than from link
+            thumbs = re.findall(r'src="([^"]+/thumb/[^"]+)"', html)
+            for thumb in thumbs:
+              # Extract number from image filename
+              m = re.search(r'_(\d+)\.\w+/\d+px-', thumb)
               if m:
                 n = int(m.group(1))
                 if 1 <= n <= count and n not in covers:
                   covers[n] = thumb_to_full(thumb)
 
-            # Fallback: find by img alt text
+            # Fallback: try broader search if too few found
             if len(covers) < count // 2:
-              alts = re.findall(
-                r'<img[^>]+alt="[^"]*?(\d+)[^"]*"[^>]+src="([^"]+/thumb/[^"]+)"',
-                html
-              )
-              for num, thumb in alts:
-                n = int(num)
-                if 1 <= n <= count and n not in covers:
-                  covers[n] = thumb_to_full(thumb)
+              all_thumbs = re.findall(r'src="([^"]+/thumb/[^"]+)"', html)
+              for thumb in all_thumbs:
+                m = re.search(r'[_\s](\d+)\.\w+(?:/|$)', thumb)
+                if m:
+                  n = int(m.group(1))
+                  if 1 <= n <= count and n not in covers:
+                    covers[n] = thumb_to_full(thumb)
 
             print('  Gefunden: ' + str(len(covers)) + '/' + str(count))
             return covers

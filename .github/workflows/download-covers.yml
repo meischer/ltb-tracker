@@ -43,9 +43,9 @@ jobs:
           # (key, count, duckipedia_article, link_pattern)
           SERIES = [
             ('haupt',     610, 'Covergalerie_Lustiges_Taschenbuch',       r'/LTB_(\d+)"'),
-            ('spezial',   118, 'Lustiges_Taschenbuch_Spezial',            r'/LTB_Spezial_(\d+)"'),
-            ('enten',      96, 'Lustiges_Taschenbuch_Enten-Edition',      r'/LTB_Enten-Edition_(\d+)"'),
-            ('premium',    50, 'Lustiges_Taschenbuch_Premium',            r'/LTB_Premium_(\d+)"'),
+            ('spezial',   130, 'Lustiges_Taschenbuch_Spezial',            r'/LTB_Spezial_(\d+)"'),
+            ('enten',      95, 'Lustiges_Taschenbuch_Enten-Edition',      r'/LTB_Enten-Edition_(\d+)"'),
+            ('premium',    48, 'Lustiges_Taschenbuch_Premium',            r'/LTB_Premium_(\d+)"'),
             ('ultimat',    48, 'Lustiges_Taschenbuch_Ultimate_Phantomias',r'/LTB_Ultimate_Phantomias_(\d+)"'),
             ('maus',       30, 'Lustiges_Taschenbuch_Maus-Edition',       r'/LTB_Maus-Edition_(\d+)"'),
             ('crime',      30, 'Lustiges_Taschenbuch_Crime',              r'/LTB_Crime_(\d+)"'),

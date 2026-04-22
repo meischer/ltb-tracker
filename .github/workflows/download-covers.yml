@@ -77,11 +77,13 @@ jobs:
             # Find pairs: link to LTB page + nearby thumb image
             # Strategy: find all gallery list items
             items = re.findall(
-              r'href="(' + link_pat.rstrip('"') + r'[^"]*)"[^>]*>.*?src="([^"]+/thumb/[^"]+)"',
+              r'href="(/[^"]+)"[^>]*>.*?src="([^"]+/thumb/[^"]+)"',
               html, re.DOTALL
             )
             for link, thumb in items:
-              m = re.search(r'(\d+)"?$', link)
+              if not re.search(link_pat, link + '"'):
+                continue
+              m = re.search(r'(\d+)$', link)
               if m:
                 n = int(m.group(1))
                 if 1 <= n <= count and n not in covers:

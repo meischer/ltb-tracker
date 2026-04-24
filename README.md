@@ -2,7 +2,7 @@
 
 Lesetracker für alle Lustigen Taschenbücher – Hauptreihe und 26 Nebenreihen. Für Kinder (und Erwachsene) die abhaken wollen, welche Bände sie schon gelesen haben.
 
-**Live:** https://meischer.github.io/ltb-tracker/
+**Live:** https://mycollecto.github.io/lustiges-taschenbuch-tracker/
 
 ---
 

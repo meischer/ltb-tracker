@@ -239,23 +239,61 @@ function makeCss(n,m){
     +'<div class="num">'+n+'</div></div>';
 }
 
+var coverCache={};
 function loadCover(card){
   var n=parseInt(card.getAttribute('data-n'));
   var series=card.getAttribute('data-s');
   var wrap=card.querySelector('.cwrap');
-  var exts=['jpg','JPG','jpeg','png','PNG'];
-  var duckUrl=getCover(series,n);
-  function tryNext(i){
-    if(i>=exts.length){
-      if(duckUrl){var img2=new Image();img2.className='cimg';img2.onload=function(){wrap.innerHTML='';wrap.appendChild(img2);};img2.src=duckUrl;}
-      return;
-    }
+  var cacheKey=series+':'+n;
+  if(coverCache[cacheKey]){
     var img=new Image();img.className='cimg';
     img.onload=function(){wrap.innerHTML='';wrap.appendChild(img);};
-    img.onerror=function(){tryNext(i+1);};
-    img.src='covers/'+series+'/LTB_'+n+'.'+exts[i];
+    img.src=coverCache[cacheKey];return;
   }
-  tryNext(0);
+  var PAGES={
+    haupt:'LTB_'+n,
+    spezial:'LTB_Spezial_'+n,
+    enten:'LTB_Enten-Edition_'+n,
+    premium:'LTB_Premium_'+n,
+    ultimat:'LTB_Ultimate_Phantomias_'+n,
+    maus:'LTB_Maus-Edition_'+n,
+    crime:'LTB_Crime_'+n,
+    abenteuer:'LTB_Abenteuer_'+n,
+    history:'LTB_History_'+n,
+    fantasy:'LTB_Fantasy_'+n,
+    galaxy:'LTB_Galaxy_'+n,
+    europa:'LTB_Europareise_'+n,
+    mystery:'LTB_Mystery_'+n,
+    premplus:'LTB_Premium_+_'+n,
+    youngcom:'LTB_Young_Comics_'+n,
+    space:'LTB_Space_'+n,
+    enstars:'LTB_Entenhausen_Stars_'+n,
+    weihnacht:'LTB_Weihnachten_'+n,
+    ostern:'LTB_Ostern_'+n,
+    halloween:'LTB_Halloween_'+n,
+    advent:'LTB_Advent_'+n,
+    sommer:'LTB_Sommer_'+n,
+    winter:'LTB_Winter_'+n,
+    royal:'LTB_Royal_'+n,
+    praesentiert:'LTB_präsentiert_'+n,
+    classic:'LTB_Classic_Edition_'+n,
+    ducktales:'LTB_DuckTales_'+n
+  };
+  var pageTitle=PAGES[series]||series+'_'+n;
+  var url='https://de.duckipedia.org/api.php?action=query&titles='+encodeURIComponent(pageTitle)+'&prop=pageimages&pithumbsize=400&format=json&origin=*';
+  fetch(url)
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var pages=data.query&&data.query.pages;
+      if(!pages)return;
+      var src=pages[Object.keys(pages)[0]].thumbnail&&pages[Object.keys(pages)[0]].thumbnail.source;
+      if(src){
+        coverCache[cacheKey]=src;
+        var img=new Image();img.className='cimg';
+        img.onload=function(){wrap.innerHTML='';wrap.appendChild(img);};
+        img.src=src;
+      }
+    }).catch(function(){});
 }
 
 function toggleRead(series,n){

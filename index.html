@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#C62828">
+<title>Lustiges Taschenbuch Tracker – Alle 1.231 Bände in 27 Reihen</title>
+<meta name="description" content="Tracke alle Lustigen Taschenbücher – 1.231 Bände in 27 Reihen.">
+<meta property="og:title" content="Lustiges Taschenbuch Tracker">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mycollecto.github.io/lustiges-taschenbuch-tracker/">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://mycollecto.github.io/lustiges-taschenbuch-tracker/">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Lustiges Taschenbuch Tracker","url":"https://mycollecto.github.io/lustiges-taschenbuch-tracker/","applicationCategory":"LifestyleApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}}
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#FFF8F0;font-family:'Nunito',sans-serif;}
+@keyframes floatDown{0%{transform:translateY(-10px) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(540deg);opacity:0;}}
+@keyframes popIn{0%{transform:scale(0.5);opacity:0;}70%{transform:scale(1.1);}100%{transform:scale(1);opacity:1;}}
+.cdot{position:fixed;top:-12px;pointer-events:none;z-index:9999;animation:floatDown 2s ease-in forwards;}
+header{padding:14px 16px 18px;position:sticky;top:0;z-index:100;box-shadow:0 4px 0 rgba(0,0,0,0.2);}
+.htop{display:flex;align-items:center;gap:10px;}
+h1{font-family:'Bangers',cursive;font-size:clamp(1.3rem,4vw,2.2rem);color:#FFD700;letter-spacing:3px;text-shadow:2px 2px 0 rgba(0,0,0,0.5);line-height:1;}
+.hsub{color:rgba(255,255,255,0.9);font-size:0.72rem;margin-top:2px;}
+.pbg{margin-top:10px;height:13px;border-radius:20px;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.35);overflow:hidden;}
+.pfill{height:100%;background:linear-gradient(90deg,#FFD700,#FF9800);border-radius:20px;transition:width 0.5s;}
+#totalbar{margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.2);}
+.tlabel{display:flex;justify-content:space-between;margin-bottom:4px;}
+.tlabel span{font-family:'Bangers',cursive;font-size:0.65rem;letter-spacing:1.5px;color:rgba(255,255,255,0.65);}
+.stabs{background:#fff;border-bottom:3px solid #333;overflow-x:auto;scrollbar-width:none;position:sticky;top:98px;z-index:95;display:flex;align-items:stretch;box-shadow:0 2px 6px rgba(0,0,0,0.08);}
+.stabs::-webkit-scrollbar{display:none;}
+.tabsrow{display:flex;padding:0 6px;min-width:max-content;flex:1;}
+.tbtn{font-family:'Bangers',cursive;font-size:0.82rem;letter-spacing:1px;padding:9px 11px;border:none;border-bottom:3px solid transparent;background:none;cursor:pointer;color:#888;white-space:nowrap;margin-bottom:-3px;}
+.tbtn.on{color:#C62828;border-bottom-color:#C62828;}
+.tbadge{font-size:0.6rem;background:#eee;border-radius:8px;padding:1px 5px;margin-left:3px;color:#999;font-family:'Nunito',sans-serif;font-weight:700;}
+.tbtn.on .tbadge{background:rgba(198,40,40,0.1);color:#C62828;}
+.mehr-btn{display:flex;align-items:center;padding:0 14px;background:#FFD700;color:#C62828;font-family:'Bangers',cursive;font-size:0.8rem;letter-spacing:1.5px;text-decoration:none;border-left:3px solid #333;white-space:nowrap;}
+.fbar{background:white;border-bottom:2px solid #eee;padding:9px 14px;position:sticky;top:127px;z-index:90;}
+.frow{max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;gap:7px;align-items:center;}
+.fbtn{font-family:'Bangers',cursive;letter-spacing:1px;font-size:0.82rem;padding:6px 13px;border:2px solid #ccc;border-radius:30px;cursor:pointer;background:white;color:#666;}
+.fbtn.on{background:#C62828;color:white;border-color:#C62828;}
+.sbox{font-family:'Nunito',sans-serif;font-size:0.85rem;padding:7px 12px;border:2px solid #ccc;border-radius:30px;outline:none;flex:1;min-width:120px;max-width:200px;}
+.sbox:focus{border-color:#C62828;}
+.gwrap{max-width:1200px;margin:0 auto;padding:14px 11px 60px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;}
+.card{cursor:pointer;border-radius:10px;overflow:hidden;background:white;box-shadow:3px 3px 0 rgba(0,0,0,0.1);border:2px solid #ddd;transition:transform 0.15s;position:relative;}
+.card:hover{transform:translateY(-3px) rotate(-0.5deg);}
+.card.read{border-color:#4CAF50;box-shadow:0 0 0 2px #4CAF50,3px 3px 0 rgba(0,0,0,0.08);}
+.card.pop{animation:popIn 0.4s ease;}
+.cbadge{display:none;position:absolute;top:5px;right:5px;z-index:5;width:24px;height:24px;border-radius:50%;background:#4CAF50;color:white;align-items:center;justify-content:center;font-size:13px;font-weight:bold;}
+.card.read .cbadge{display:flex;}
+.cwrap{width:100%;aspect-ratio:2/3;overflow:hidden;}
+.cimg{width:100%;height:100%;object-fit:cover;display:block;}
+.ccss{width:100%;height:100%;display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.ccss .st{position:absolute;left:-30%;width:160%;height:18%;background:rgba(255,255,255,0.07);transform:rotate(-12deg);}
+.ccss .logo{background:rgba(0,0,0,0.6);padding:3px 0;text-align:center;font-size:0.42rem;font-family:'Bangers',cursive;letter-spacing:2px;color:#FFD700;position:relative;z-index:1;}
+.ccss .emo{flex:1;display:flex;align-items:center;justify-content:center;font-size:2.2rem;position:relative;z-index:1;}
+.ccss .num{background:rgba(0,0,0,0.7);padding:2px 5px;text-align:center;font-family:'Bangers',cursive;font-size:0.65rem;letter-spacing:1px;color:#FFD700;position:relative;z-index:1;}
+.ctitle{font-family:'Nunito',sans-serif;font-weight:700;font-size:0.58rem;padding:5px 5px 3px;text-align:center;color:#333;line-height:1.3;min-height:2.5em;display:flex;align-items:center;justify-content:center;}
+.card.read .ctitle{background:#F1FFF3;}
+.btnrow{display:flex;gap:3px;padding:0 4px 5px;}
+.card.read .btnrow{display:none;}
+.buy-btn{flex:1;padding:4px 2px;border:none;border-radius:6px;font-family:'Nunito',sans-serif;font-weight:800;font-size:0.55rem;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;background:#FF9900;color:white;}
+.schip{display:inline-block;font-size:0.6rem;padding:1px 6px;border-radius:8px;margin-left:5px;font-weight:700;}
+.s-aktiv{background:#E8F5E9;color:#2E7D32;}
+.s-eingestellt{background:#FFEBEE;color:#C62828;}
+.s-abgeschlossen{background:#E3F2FD;color:#1565C0;}
+.s-pause{background:#FFF3E0;color:#E65100;}
+.empty{text-align:center;padding:50px 0;color:#aaa;}
+footer{text-align:center;padding:10px 0 24px;color:#aaa;font-size:0.62rem;}
+</style>
+</head>
+<body>
+<header id="hdr" style="background:linear-gradient(135deg,#C62828,#E53935)">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="htop">
+      <span style="font-size:1.8rem">&#128118;</span>
+      <div style="flex:1">
+        <h1 id="htitle">MEINE LTB-SAMMLUNG</h1>
+        <div class="hsub" id="hsub">Lade...</div>
+      </div>
+      <span style="font-size:1.8rem">&#128218;</span>
+    </div>
+    <div class="pbg"><div class="pfill" id="pfill" style="width:0%"></div></div>
+    <div id="totalbar">
+      <div class="tlabel">
+        <span>GESAMT</span>
+        <span id="totaltext">0 / 1231</span>
+      </div>
+      <div class="pbg"><div id="totalfill" style="height:100%;background:rgba(255,255,255,0.4);border-radius:20px;width:0%;transition:width 0.5s"></div></div>
+    </div>
+  </div>
+</header>
+<div class="stabs">
+  <div class="tabsrow" id="tabsrow"></div>
+  <a href="https://mycollecto.github.io" class="mehr-btn">&#128240; MEHR</a>
+</div>
+<div class="fbar">
+  <div class="frow">
+    <button class="fbtn on" data-f="alle" onclick="setFilter(this)">Alle</button>
+    <button class="fbtn" data-f="gelesen" onclick="setFilter(this)">Gelesen</button>
+    <button class="fbtn" data-f="ungelesen" onclick="setFilter(this)">Noch nicht</button>
+    <input class="sbox" type="text" placeholder="&#128269; Suchen..." oninput="setSearch(this.value)">
+  </div>
+</div>
+<div class="gwrap">
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">
+    <div style="font-size:2.5rem;margin-bottom:8px">&#128118;</div>
+    <p style="font-family:Bangers,cursive;font-size:1.3rem;letter-spacing:2px">Nicht gefunden!</p>
+  </div>
+</div>
+<footer>Cover via Duckipedia &middot; Fortschritt lokal gespeichert &middot; &copy; Disney / Egmont Ehapa</footer>
+<script>
+var STORAGE_KEY = 'ltb-v3';
+var AFFILIATE = 'httpstwit0cdc-21';
+var TOTAL_ALL = 1231;
+
+var SERIES_META = [
+  {key:'haupt',label:'Hauptreihe',emoji:'&#128118;',c1:'#C62828',c2:'#E53935',count:610,status:'aktiv'},
+  {key:'spezial',label:'LTB Spezial',emoji:'&#11088;',c1:'#1565C0',c2:'#1E88E5',count:130,status:'aktiv'},
+  {key:'enten',label:'LTB Enten-Edition',emoji:'&#128037;',c1:'#E65100',c2:'#FB8C00',count:95,status:'aktiv'},
+  {key:'premium',label:'LTB Premium',emoji:'&#128142;',c1:'#4527A0',c2:'#7E57C2',count:48,status:'aktiv'},
+  {key:'ultimat',label:'LTB Ultimate Phantomias',emoji:'&#129464;',c1:'#212121',c2:'#424242',count:48,status:'abgeschlossen'},
+  {key:'maus',label:'LTB Maus-Edition',emoji:'&#128045;',c1:'#00695C',c2:'#26A69A',count:30,status:'eingestellt'},
+  {key:'crime',label:'LTB Crime',emoji:'&#128269;',c1:'#263238',c2:'#546E7A',count:30,status:'pause'},
+  {key:'abenteuer',label:'LTB Abenteuer',emoji:'&#127755;',c1:'#2E7D32',c2:'#43A047',count:20,status:'aktiv'},
+  {key:'history',label:'LTB History',emoji:'&#128332;',c1:'#4E342E',c2:'#8D6E63',count:6,status:'abgeschlossen'},
+  {key:'fantasy',label:'LTB Fantasy',emoji:'&#129497;',c1:'#AD1457',c2:'#EC407A',count:6,status:'abgeschlossen'},
+  {key:'galaxy',label:'LTB Galaxy',emoji:'&#128640;',c1:'#1A237E',c2:'#5C6BC0',count:6,status:'abgeschlossen'},
+  {key:'europa',label:'LTB Europareise',emoji:'&#127757;',c1:'#00838F',c2:'#26C6DA',count:6,status:'aktiv'},
+  {key:'mystery',label:'LTB Mystery',emoji:'&#128123;',c1:'#4A148C',c2:'#9C27B0',count:6,status:'aktiv'},
+  {key:'premplus',label:'LTB Premium +',emoji:'&#10024;',c1:'#6A1B9A',c2:'#AB47BC',count:8,status:'abgeschlossen'},
+  {key:'youngcom',label:'LTB Young Comics',emoji:'&#127912;',c1:'#0277BD',c2:'#29B6F6',count:20,status:'aktiv'},
+  {key:'space',label:'LTB Space',emoji:'&#128760;',c1:'#0D1B3E',c2:'#1565C0',count:6,status:'abgeschlossen'},
+  {key:'enstars',label:'LTB Entenhausen Stars',emoji:'&#127775;',c1:'#B71C1C',c2:'#EF5350',count:18,status:'eingestellt'},
+  {key:'weihnacht',label:'LTB Weihnachten',emoji:'&#127876;',c1:'#1B5E20',c2:'#43A047',count:32,status:'aktiv'},
+  {key:'ostern',label:'LTB Ostern',emoji:'&#128035;',c1:'#558B2F',c2:'#9CCC65',count:17,status:'aktiv'},
+  {key:'halloween',label:'LTB Halloween',emoji:'&#127875;',c1:'#BF360C',c2:'#FF7043',count:11,status:'aktiv'},
+  {key:'advent',label:'LTB Advent',emoji:'&#128557;',c1:'#C62828',c2:'#FF8F00',count:11,status:'aktiv'},
+  {key:'sommer',label:'LTB Sommer',emoji:'&#9728;',c1:'#F57F17',c2:'#FFD54F',count:15,status:'aktiv'},
+  {key:'winter',label:'LTB Winter',emoji:'&#10052;',c1:'#0277BD',c2:'#81D4FA',count:7,status:'aktiv'},
+  {key:'royal',label:'LTB Royal',emoji:'&#128081;',c1:'#4E342E',c2:'#8D6E63',count:13,status:'aktiv'},
+  {key:'praesentiert',label:'LTB praesentiert',emoji:'&#127917;',c1:'#37474F',c2:'#78909C',count:8,status:'pause'},
+  {key:'classic',label:'LTB Classic Edition',emoji:'&#128220;',c1:'#5D4037',c2:'#A1887F',count:20,status:'abgeschlossen'},
+  {key:'ducktales',label:'LTB DuckTales',emoji:'&#128118;',c1:'#1565C0',c2:'#42A5F5',count:4,status:'abgeschlossen'}
+];
+
+function getCover(series, n) { return null; }
+
+var cur = {series:'haupt', filter:'alle', search:''};
+var read = {};
+try { read = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) {}
+function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(read)); } catch(e) {} }
+function rkey(s, n) { return s + ':' + n; }
+function getMeta(key) {
+  for (var i = 0; i < SERIES_META.length; i++) {
+    if (SERIES_META[i].key === key) return SERIES_META[i];
+  }
+  return null;
+}
+function getTotalRead() {
+  var c = 0;
+  for (var k in read) { if (read[k]) c++; }
+  return c;
+}
+function updateTotalBar() {
+  var done = getTotalRead();
+  var pct = Math.round(done / TOTAL_ALL * 100);
+  document.getElementById('totaltext').textContent = done + ' / ' + TOTAL_ALL;
+  document.getElementById('totalfill').style.width = pct + '%';
+}
+function buildTabs() {
+  var row = document.getElementById('tabsrow');
+  row.innerHTML = '';
+  SERIES_META.forEach(function(s) {
+    var done = 0;
+    for (var n = 1; n <= s.count; n++) { if (read[rkey(s.key, n)]) done++; }
+    var btn = document.createElement('button');
+    btn.className = 'tbtn' + (s.key === cur.series ? ' on' : '');
+    btn.innerHTML = s.emoji + ' ' + s.label + '<span class="tbadge">' + done + '/' + s.count + '</span>';
+    btn.setAttribute('data-key', s.key);
+    btn.onclick = function() { setSeries(this.getAttribute('data-key')); };
+    row.appendChild(btn);
+  });
+}
+function updateHeader() {
+  var m = getMeta(cur.series);
+  var done = 0;
+  for (var n = 1; n <= m.count; n++) { if (read[rkey(cur.series, n)]) done++; }
+  var pct = Math.round(done / m.count * 100);
+  var smap = {aktiv:'aktiv', eingestellt:'eingestellt', abgeschlossen:'abgeschlossen', pause:'Pause'};
+  document.getElementById('htitle').textContent = m.label.toUpperCase();
+  document.getElementById('hsub').innerHTML = done + ' von ' + m.count + ' gelesen &middot; ' + pct + '% <span class="schip s-' + m.status + '">' + smap[m.status] + '</span>';
+  document.getElementById('pfill').style.width = pct + '%';
+  document.getElementById('hdr').style.background = 'linear-gradient(135deg,' + m.c1 + ',' + m.c2 + ')';
+  updateTotalBar();
+}
+function setSeries(key) {
+  cur.series = key; cur.filter = 'alle'; cur.search = '';
+  document.querySelector('.sbox').value = '';
+  document.querySelectorAll('.fbtn').forEach(function(b) { b.classList.toggle('on', b.getAttribute('data-f') === 'alle'); });
+  buildTabs(); updateHeader(); renderGrid();
+  setTimeout(function() { var a = document.querySelector('.tbtn.on'); if (a) a.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); }, 50);
+}
+var ioObs = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) { if (e.isIntersecting) { loadCover(e.target); ioObs.unobserve(e.target); } });
+}, {rootMargin:'400px'});
+
+function makeCss(n, m) {
+  var chars = ['&#128118;','&#128045;','&#128176;','&#129464;','&#127913;','&#128269;','&#128640;','&#9876;','&#129497;','&#127754;','&#127955;','&#127914;','&#129409;','&#128024;','&#127755;'];
+  var ch = chars[(n-1) % chars.length];
+  return '<div class="ccss" style="background:linear-gradient(145deg,' + m.c1 + ' 0%,' + m.c2 + ' 100%)">'
+    + '<div class="st" style="top:-10%"></div>'
+    + '<div class="st" style="top:25%"></div>'
+    + '<div class="st" style="top:60%"></div>'
+    + '<div class="logo">LTB</div>'
+    + '<div class="emo">' + ch + '</div>'
+    + '<div class="num">' + n + '</div></div>';
+}
+function loadCover(card) {
+  var n = parseInt(card.getAttribute('data-n'));
+  var series = card.getAttribute('data-s');
+  var wrap = card.querySelector('.cwrap');
+  var exts = ['jpg', 'png', 'JPG', 'jpeg'];
+  function tryNext(i) {
+    if (i >= exts.length) return;
+    var img = new Image();
+    img.className = 'cimg';
+    img.onload = function() { wrap.innerHTML = ''; wrap.appendChild(img); };
+    img.onerror = function() { tryNext(i + 1); };
+    img.src = 'covers/' + series + '/LTB_' + n + '.' + exts[i];
+  }
+  tryNext(0);
+}
+function toggleRead(series, n) {
+  var key = rkey(series, n);
+  var card = document.querySelector('[data-s="' + series + '"][data-n="' + n + '"]');
+  if (read[key]) {
+    delete read[key];
+    if (card) { card.classList.remove('read', 'pop'); }
+  } else {
+    read[key] = true;
+    if (card) { card.classList.add('read', 'pop'); setTimeout(function() { card.classList.remove('pop'); }, 500); }
+    spawnConfetti();
+  }
+  save(); updateHeader(); buildTabs();
+}
+function spawnConfetti() {
+  var c = ['#FFD700','#C62828','#4CAF50','#FF9800','#E91E63','#00BCD4'];
+  for (var i = 0; i < 20; i++) {
+    var d = document.createElement('div');
+    d.className = 'cdot';
+    var sz = 6 + Math.random() * 8;
+    d.style.cssText = 'width:' + sz + 'px;height:' + sz + 'px;background:' + c[i%c.length] + ';left:' + (Math.random()*100) + '%;animation-delay:' + (Math.random()*0.6) + 's;animation-duration:' + (1.2+Math.random()) + 's;border-radius:' + (Math.random()>.5?'50%':'3px');
+    document.body.appendChild(d);
+    setTimeout(function() { if (d.parentNode) d.parentNode.removeChild(d); }, 3000);
+  }
+}
+function renderGrid() {
+  var m = getMeta(cur.series);
+  var s = cur.search.toLowerCase();
+  var grid = document.getElementById('grid');
+  var empty = document.getElementById('empty');
+  var books = [];
+  for (var n = 1; n <= m.count; n++) {
+    if (s && String(n).indexOf(s) < 0) continue;
+    var k = rkey(cur.series, n);
+    if (cur.filter === 'gelesen' && !read[k]) continue;
+    if (cur.filter === 'ungelesen' && read[k]) continue;
+    books.push(n);
+  }
+  grid.innerHTML = '';
+  if (!books.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  var frag = document.createDocumentFragment();
+  books.forEach(function(n) {
+    var k = rkey(cur.series, n);
+    var card = document.createElement('div');
+    card.className = 'card' + (read[k] ? ' read' : '');
+    card.setAttribute('data-n', n);
+    card.setAttribute('data-s', cur.series);
+    var searchQ = encodeURIComponent('Lustiges Taschenbuch ' + cur.series + ' ' + n);
+    var buyUrl = 'https://www.amazon.de/s?k=' + searchQ + '&tag=' + AFFILIATE;
+    var shortLabel = getMeta(cur.series).label.replace('LTB ', '').replace('Hauptreihe', 'LTB');
+    var cardHtml = '<div class="cbadge">&#10003;</div>';
+    cardHtml += '<div class="cwrap">' + makeCss(n, m) + '</div>';
+    cardHtml += '<div class="ctitle">' + shortLabel + ' ' + n + '</div>';
+    cardHtml += '<div class="btnrow"><a class="buy-btn" href="' + buyUrl + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128722; Kaufen</a></div>';
+    card.innerHTML = cardHtml;
+    card.addEventListener('click', (function(s, nn) { return function() { toggleRead(s, nn); }; })(cur.series, n));
+    frag.appendChild(card);
+    ioObs.observe(card);
+  });
+  grid.appendChild(frag);
+}
+function setFilter(btn) {
+  cur.filter = btn.getAttribute('data-f');
+  document.querySelectorAll('.fbtn').forEach(function(b) { b.classList.toggle('on', b === btn); });
+  renderGrid();
+}
+function setSearch(v) { cur.search = v; renderGrid(); }
+
+// Init
+var im = getMeta('haupt');
+document.getElementById('hdr').style.background = 'linear-gradient(135deg,' + im.c1 + ',' + im.c2 + ')';
+buildTabs(); updateHeader(); renderGrid();
+</script>
+</body>
+</html>

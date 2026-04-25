@@ -8,7 +8,7 @@ Lesetracker für alle Lustigen Taschenbücher – Hauptreihe und 26 Nebenreihen.
 
 ## Features
 
-- 📚 **1.231 Bände** in 27 Reihen
+- 📚 **Über 1.000 Bände** in 27 Reihen
 - 🖼️ **Echte Cover** von Duckipedia (wo verfügbar), sonst farbige Fallback-Karten
 - ✅ **Abhaken** mit Konfetti-Animation
 - 📊 **Fortschrittsbalken** pro Reihe
